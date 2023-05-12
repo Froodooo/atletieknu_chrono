@@ -1,4 +1,3 @@
-// See https://www.tutorialspoint.com/how-to-create-and-save-text-file-in-javascript
 class Save {
   saveFile = (content) => {
     // Create element with <a> tag
