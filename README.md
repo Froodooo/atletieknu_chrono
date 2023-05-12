@@ -19,5 +19,8 @@ _Hierin vind je onder andere het bestand $manifest.json$._
 5. Ben je klaar, klik dan op "Kopiëren en opslaan". Hiermee download je het bestand $chrono.html$, welke je kunt openen in een internetbrowser en eventueel kunt printen.
 6. Klik op de knop "Legen" om alle tot nu toe toegevoegde teams te verwijderen van je persoonlijke chronoloog.
 
+# Voorbeeld
+Check de [video](/examples/persoonlijkchronoloog.mp4).
+
 # Vragen
 Kom je problemen tegen of heb je vragen? Laat ze achter bij de [Issues](https://github.com/Froodooo/atletieknu_chrono/issues).
