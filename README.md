@@ -5,11 +5,11 @@ Met deze "Atletiek.nu Chrono Builder" kun je door het selecteren van (competitie
 # Installeren
 1. Download de bestanden uit deze repository (klik op de knop Code > Download ZIP of clone de repository).
 2. Pak zo nodig het ZIP-bestand uit.
-3. Open in Chrome een nieuw tabblad en open "chrome://extensions".
+3. Open in Chrome een nieuw tabblad en open $chrome://extensions$.
 4. Zet rechtsboven de optie "Developer mode" aan.
 5. Klik linksboven op "Load unpacked".
 6. Selecteer de map waarin het uitgepakte ZIP-bestand (of de repository) staat.\
-_Hierin vind je onder andere het bestand $manifest.json$._
+_Hierin vind je onder andere het bestand manifest.json._
 
 # Gebruiken
 1. Open een team binnen een categorie bij een competitiewedstrijd op [atletiek.nu](https://www.atletiek.nu/).
