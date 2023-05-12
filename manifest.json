@@ -17,6 +17,5 @@
       "js": ["scripts/save.js", "scripts/sort.js", "scripts/content.js"],
       "css": ["styles/style.css"]
     }
-  ],
-  "permissions": ["activeTab"]
+  ]
 }

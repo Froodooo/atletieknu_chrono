@@ -74,16 +74,4 @@ function run () {
 const save = new Save();
 const sort = new Sort();
 
-if (window.performance.getEntriesByType('navigation').map((nav) => nav.type).includes('reload')) {
-  run();
-} else {
-  const target = document.querySelector('body');
-  const config = { childList: true };
-  const callback = () => {
-    if (document.getElementsByClassName('chronoloogtabel')[0] && window.location.href.indexOf("team/main") > -1) {
-      run();
-    }
-  }
-  const observer = new MutationObserver(callback);
-  observer.observe(target, config);
-}
+run();
