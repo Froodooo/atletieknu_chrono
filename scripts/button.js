@@ -49,6 +49,7 @@ class Button {
     copySaveButton.onclick = function () {
       const buildChronoHtml = (chronoData) => {
         const chronoTable = document.createElement('table');
+        chronoTable.className = 'chronoloogtabel';
         chronoTable.innerHTML = chronoData;
       
         const sort = new Sort();

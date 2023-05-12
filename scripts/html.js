@@ -1,8 +1,10 @@
 class Html {
   createTableHead = () => {
     const tr = document.createElement('tr');
+    
     for (let i = 0; i < 3; i++) {
-      tr.appendChild( document.createElement('th') );
+      const th = document.createElement('th');
+      tr.appendChild(th);
     }
 
     tr.cells[0].appendChild(document.createTextNode('Tijd'));
@@ -35,7 +37,7 @@ class Html {
 
   createHtmlPage = (chronoTable) => {
     const html = document.createElement('html');
-    
+
     const head = this.createHtmlHead();
     html.appendChild(head);
 
