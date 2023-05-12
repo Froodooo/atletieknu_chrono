@@ -20,7 +20,7 @@ _Hierin vind je onder andere het bestand $manifest.json$._
 6. Klik op de knop "Legen" om alle tot nu toe toegevoegde teams te verwijderen van je persoonlijke chronoloog.
 
 # Voorbeeld
-Check de [video](/examples/persoonlijkchronoloog.mp4).
+https://github.com/Froodooo/atletieknu_chrono/assets/2883455/9470e8ab-2ad4-4e8d-9396-52010898cb4f
 
 # Vragen
 Kom je problemen tegen of heb je vragen? Laat ze achter bij de [Issues](https://github.com/Froodooo/atletieknu_chrono/issues).
