@@ -14,53 +14,76 @@ const chrono = () => {
   chronoTable.parentNode.prepend(addButton);
 }
 
-const longDistanceResult = (distance, result) => {
+const longDistanceResult = (eventText, result) => {
   const minutes = parseInt(result.split(":")[0]);
   const seconds = parseInt(result.split(":")[1].split(",")[0]);
 
-  switch (distance) {
-    case 600:
-      return parseInt(160470.5 / (minutes * 60 + seconds) - 911.35);
-    case 1000:
-      return parseInt(276912.0 / (minutes * 60 + seconds) - 838.50);
-    default:
-      return result;
+  return parseInt(POINTS[eventText].A / (minutes * 60 + seconds) - POINTS[eventText].B);
+}
+
+const sprintResult = (event, result) => {
+  return parseInt(POINTS[event].A / result - POINTS[event].B)
+}
+
+const jumpThrowResult = (eventText, result) => {
+  if (eventText === "Hoogspringen" && result <= 1.35) {
+    result = parseInt((result - 0.67) * 733.33333 + 0.7);
+  } else if (eventText === "Verspringen" && result <= 4.41) {
+    result = parseInt((result - 1.91) * 200 + 0.5);
+  } else if (POINTS[eventText]) {
+    result = parseInt(POINTS[eventText].A * Math.sqrt(result) - POINTS[eventText].B);
+  }
+
+  return result;
+}
+
+const pointResult = (eventText, result) => {
+  let event = undefined;
+
+  event = SPRINTS.find(e => eventText.includes(e));
+  if (event) {
+    return sprintResult(event, result);
+  }
+
+  event = LONGDISTANCES.find(e => eventText.includes(e));
+  if (event) {
+    return longDistanceResult(event, result);
+  }
+
+  event = JUMPTHROW.find(e => eventText.includes(e));
+  if (event) {
+    return jumpThrowResult(event, result);
+  }
+
+  return "Niet ondersteund";
+}
+
+const rawResult = (row, eventText) => {
+  const event = LONGDISTANCES.find(e => eventText.includes(e));
+  if (event) {
+    return row.children[1].innerText.trim().split("\n")[0].trim().split(",")[0];
+  } else {
+    return parseFloat(row.children[1].innerText.trim().split("\n")[0].replace(",", "."));
   }
 }
 
 const personalRecords = () => {
-  const recordsTable = document.querySelector('#records #persoonlijkerecords > tbody:first-of-type');
-  const rows = [].filter.call(recordsTable.getElementsByTagName("tr"), el => el.className.indexOf("notThatImportant") === -1);
-  console.log(recordsTable);
-  console.log(rows);
+  const recordsTableHead = document.querySelector('#records #persoonlijkerecords > thead:first-of-type > tr:first-of-type');
+  const pointsHeader = document.createElement("th");
+  pointsHeader.innerText = "Punten";
+  recordsTableHead.appendChild(pointsHeader);
+
+  const recordsTableBody = document.querySelector('#records #persoonlijkerecords > tbody:first-of-type');
+  const rows = recordsTableBody.getElementsByTagName("tr");
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
 
     const eventText = row.children[0].innerText.trim();
-    let result = parseFloat(row.children[1].innerText.split("\n")[0].replace(",", "."));
+    const result = rawResult(row, eventText);
 
     const cell = document.createElement("td");
-
-    switch (eventText) {
-      case "40 meter":
-        result = parseInt(10834.0 / result - 1096.00);
-        break;
-      case "60 meter":
-        result = parseInt(15365.0 / result - 1158.00);
-        break;
-      case "80 meter":
-        result = parseInt(19933.0 / result - 1193.00);
-        break;
-      case "600 meter":
-        result = longDistanceResult(600, row.children[1].innerText.split("\n")[0].split(",")[0]);
-        break;
-      case "1000 meter":
-        result = longDistanceResult(1000, row.children[1].innerText.split("\n")[0].split(",")[0]);
-        break;
-    }
-
-    cell.innerText = result;
+    cell.innerText = pointResult(eventText, result);
 
     row.appendChild(cell);
   }

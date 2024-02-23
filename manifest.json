@@ -14,7 +14,7 @@
       "matches": [
         "https://www.atletiek.nu/*"
       ],
-      "js": ["scripts/save.js", "scripts/button.js", "scripts/html.js", "scripts/sort.js", "scripts/content.js"],
+      "js": ["scripts/constants.js", "scripts/save.js", "scripts/button.js", "scripts/html.js", "scripts/sort.js", "scripts/content.js"],
       "run_at": "document_end"
     }
   ]
