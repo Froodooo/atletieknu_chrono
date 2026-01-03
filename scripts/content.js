@@ -89,10 +89,27 @@ const personalRecords = () => {
   }
 }
 
-const url = window.location.href;
 
-if (url.includes("team/main")) {
-  chrono();
-} else if (url.includes("records")) {
-  personalRecords();
+let lastUrl = location.href;
+
+function init() {
+  const url = location.href;
+  console.log("INIT:", url);
+
+  if (url.includes("team/main")) {
+    chrono();
+  } else if (url.includes("records")) {
+    personalRecords();
+  }
 }
+
+new MutationObserver(() => {
+  const currentUrl = location.href;
+  if (currentUrl !== lastUrl) {
+    lastUrl = currentUrl;
+    init();
+  }
+}).observe(document, { subtree: true, childList: true });
+
+// Run once on initial load
+init();
