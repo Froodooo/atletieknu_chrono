@@ -6,11 +6,17 @@ const create = () => {
 }
 
 class Button {
-  configureAdd = (chrono) => {
+  configureAdd = (getChrono) => {
     const addButton = create();
     addButton.textContent = "Toevoegen";
     
     addButton.onclick = function() {
+      const chrono = getChrono();
+
+      if (!chrono) {
+        return;
+      }
+
       const tableHead = chrono.getElementsByTagName("thead")[0];
       tableHead && chrono.removeChild(tableHead);
       const rows = chrono.getElementsByTagName("tr");

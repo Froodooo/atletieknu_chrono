@@ -1,17 +1,36 @@
+const CHRONO_CONTROLS_SELECTOR = '[data-chrono-controls="true"]';
+const RECORDS_POINTS_SELECTOR = '[data-chrono-points="true"]';
+
 const chrono = () => {
   const chronoTable = document.getElementById("chronoloog_1");
-  const chronoClone = chronoTable.cloneNode(true);
+
+  if (!chronoTable || !chronoTable.parentNode) {
+    return false;
+  }
+
+  const chronoContainer = chronoTable.parentNode;
+
+  if (chronoContainer.querySelector(CHRONO_CONTROLS_SELECTOR)) {
+    return true;
+  }
+
+  const controls = document.createElement("div");
+  controls.setAttribute("data-chrono-controls", "true");
 
   const button = new Button();
 
   const copySaveButton = button.configureCopySave();
-  chronoTable.parentNode.prepend(copySaveButton);
+  controls.appendChild(copySaveButton);
 
   const clearButton = button.configureClear();
-  chronoTable.parentNode.prepend(clearButton);
+  controls.appendChild(clearButton);
 
-  const addButton = button.configureAdd(chronoClone);
-  chronoTable.parentNode.prepend(addButton);
+  const addButton = button.configureAdd(() => chronoTable.cloneNode(true));
+  controls.appendChild(addButton);
+
+  chronoContainer.prepend(controls);
+
+  return true;
 }
 
 const longDistanceResult = (eventText, result) => {
@@ -69,11 +88,21 @@ const rawResult = (row, eventText) => {
 
 const personalRecords = () => {
   const recordsTableHead = document.querySelector('#records #persoonlijkerecords > thead:first-of-type > tr:first-of-type');
+  const recordsTableBody = document.querySelector('#records #persoonlijkerecords > tbody:first-of-type');
+
+  if (!recordsTableHead || !recordsTableBody) {
+    return false;
+  }
+
+  if (recordsTableHead.querySelector(RECORDS_POINTS_SELECTOR)) {
+    return true;
+  }
+
   const pointsHeader = document.createElement("th");
   pointsHeader.innerText = "Punten";
+  pointsHeader.setAttribute("data-chrono-points", "true");
   recordsTableHead.appendChild(pointsHeader);
 
-  const recordsTableBody = document.querySelector('#records #persoonlijkerecords > tbody:first-of-type');
   const rows = recordsTableBody.getElementsByTagName("tr");
 
   for (let i = 0; i < rows.length; i++) {
@@ -87,12 +116,56 @@ const personalRecords = () => {
 
     row.appendChild(cell);
   }
+
+  return true;
 }
 
-const url = window.location.href;
+const syncPageEnhancements = () => {
+  const url = window.location.href;
 
-if (url.includes("team/main")) {
-  chrono();
-} else if (url.includes("records")) {
-  personalRecords();
+  if (url.includes("team/main")) {
+    chrono();
+  } else if (url.includes("records")) {
+    personalRecords();
+  }
+}
+
+let scheduledSync = false;
+
+const scheduleSync = () => {
+  if (scheduledSync) {
+    return;
+  }
+
+  scheduledSync = true;
+
+  requestAnimationFrame(() => {
+    scheduledSync = false;
+    syncPageEnhancements();
+  });
+}
+
+const observePageChanges = () => {
+  const observer = new MutationObserver(() => {
+    scheduleSync();
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+}
+
+const initialize = () => {
+  scheduleSync();
+
+  if (document.body) {
+    observePageChanges();
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initialize, { once: true });
+} else {
+  initialize();
 }
