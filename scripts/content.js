@@ -39,6 +39,28 @@ const ensureChronoStyles = () => {
       background: #fff;
     }
 
+    .chrono-controls__checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding-left: 8px;
+      border-left: 1px solid #c9d2d8;
+      color: #44525c;
+    }
+
+    .chrono-controls__optional {
+      display: inline-block;
+      margin-left: 4px;
+      padding: 2px 5px;
+      border: 1px solid #9aa8b2;
+      border-radius: 3px;
+      color: #5f6d76;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.2;
+    }
+
     .chrono-controls__status {
       color: #44525c;
       font-size: 13px;
