@@ -19,6 +19,12 @@ _Hierin vind je onder andere het bestand manifest.json._
 5. Ben je klaar, klik dan op "Kopiëren en opslaan". Hiermee download je het bestand $chrono.html$, welke je kunt openen in een internetbrowser en eventueel kunt printen.
 6. Klik op de knop "Legen" om alle tot nu toe toegevoegde teams te verwijderen van je persoonlijke chronoloog.
 
+# Verenigingschronoloog
+1. Open een inschrijfpagina van een wedstrijd op [atletiek.nu](https://www.atletiek.nu/), bijvoorbeeld via een URL als `https://www.atletiek.nu/wedstrijd/atleten/...`.
+2. Boven de inschrijvingstabel verschijnt een extra blok met een verenigingskeuze en de knop "Maak chronoloog".
+3. Kies een vereniging en klik op "Maak chronoloog".
+4. De extensie haalt vervolgens de atleetpagina's van die vereniging op, combineert hun tijdschema's en downloadt direct een nieuw bestand `chrono.html`.
+
 # Voorbeeld
 https://github.com/Froodooo/atletieknu_chrono/assets/2883455/1e9cd3ee-7805-4a6f-b03a-adb8f23b89bb
 
