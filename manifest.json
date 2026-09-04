@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Atletiek.nu Chrono Builder",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Bouw een persoonlijk tijdschema voor jouw teams.",
   "icons": {
     "16": "images/icon-16.png",
