@@ -1,5 +1,43 @@
 class ClubChrono {
   controlsSelector = '[data-club-chrono-controls="true"]';
+  requestDelayMs = 300;
+  maxRetries = 5;
+
+  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  getRetryAfterMs = (response, attempt) => {
+    const retryAfterHeader = response.headers.get("Retry-After");
+
+    if (retryAfterHeader) {
+      const seconds = Number(retryAfterHeader);
+
+      if (!Number.isNaN(seconds)) {
+        return seconds * 1000;
+      }
+
+      const retryDate = new Date(retryAfterHeader);
+
+      if (!Number.isNaN(retryDate.getTime())) {
+        return Math.max(0, retryDate.getTime() - Date.now());
+      }
+    }
+
+    return Math.min(1000 * 2 ** attempt, 10000);
+  }
+
+  fetchWithThrottle = async (url, options = {}) => {
+    await this.sleep(this.requestDelayMs);
+
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      const response = await fetch(url, options);
+
+      if (response.status !== 429 || attempt === this.maxRetries) {
+        return response;
+      }
+
+      await this.sleep(this.getRetryAfterMs(response, attempt));
+    }
+  }
 
   normalizeText = (value) => {
     return (value ?? "").replace(/\s+/g, " ").trim();
@@ -164,7 +202,7 @@ class ClubChrono {
   }
 
   fetchDocument = async (url) => {
-    const response = await fetch(url, {
+    const response = await this.fetchWithThrottle(url, {
       credentials: "include"
     });
 
@@ -348,7 +386,7 @@ class ClubChrono {
       const athleteEntry = athleteEntries[index];
       this.setStatus(statusElement, `Tijdschema ophalen ${index + 1}/${athleteEntries.length}`);
 
-      const response = await fetch(athleteEntry.url, {
+      const response = await this.fetchWithThrottle(athleteEntry.url, {
         credentials: "include"
       });
 
@@ -370,10 +408,19 @@ class ClubChrono {
     }
 
     const chronoHtml = this.buildChronoHtml(this.buildChronoRowsHtml(chronoEntries));
-    await navigator.clipboard.writeText(chronoHtml.outerHTML);
+
+    let clipboardCopied = true;
+
+    try {
+      await navigator.clipboard.writeText(chronoHtml.outerHTML);
+    } catch (error) {
+      clipboardCopied = false;
+    }
 
     const save = new Save();
     save.saveFile(chronoHtml.outerHTML);
+
+    return clipboardCopied;
   }
 
   render = () => {
@@ -451,8 +498,10 @@ class ClubChrono {
           return;
         }
 
-        await this.buildClubChrono(selectedClub, athleteEntries, status);
-        this.setStatus(status, `Chronoloog gemaakt voor ${selectedClub}`);
+        const clipboardCopied = await this.buildClubChrono(selectedClub, athleteEntries, status);
+        this.setStatus(status, clipboardCopied
+          ? `Chronoloog gemaakt voor ${selectedClub}`
+          : `Chronoloog gemaakt voor ${selectedClub} (bestand gedownload, kopiëren naar klembord is mislukt)`);
       } catch (error) {
         this.setStatus(status, error.message, true);
       } finally {
