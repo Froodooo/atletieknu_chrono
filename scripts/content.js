@@ -1,5 +1,34 @@
 const CHRONO_CONTROLS_SELECTOR = '[data-chrono-controls="true"]';
 const RECORDS_POINTS_SELECTOR = '[data-chrono-points="true"]';
+const CHRONO_STYLE_SELECTOR = '[data-chrono-style="true"]';
+
+const ensureChronoStyles = () => {
+  if (document.head.querySelector(CHRONO_STYLE_SELECTOR)) {
+    return;
+  }
+
+  const style = document.createElement("style");
+  style.setAttribute("data-chrono-style", "true");
+  style.textContent = `
+    .chrono-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+
+    .chrono-controls .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 0 14px;
+    }
+  `;
+
+  document.head.appendChild(style);
+}
 
 const chrono = () => {
   const chronoTable = document.getElementById("chronoloog_1");
@@ -14,7 +43,10 @@ const chrono = () => {
     return true;
   }
 
+  ensureChronoStyles();
+
   const controls = document.createElement("div");
+  controls.className = "chrono-controls";
   controls.setAttribute("data-chrono-controls", "true");
 
   const button = new Button();
