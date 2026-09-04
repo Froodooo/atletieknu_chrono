@@ -207,7 +207,7 @@ class ClubChrono {
     });
 
     if (!response.ok) {
-      throw new Error(`Ophalen mislukt voor ${url}`);
+      throw new Error(`Ophalen mislukt voor ${url} (HTTP ${response.status})`);
     }
 
     const htmlText = await response.text();
@@ -281,7 +281,17 @@ class ClubChrono {
     return `${timeText}__${eventText}`;
   }
 
-  parseAthleteChronoRows = (htmlText, athleteName) => {
+  isFinalEvent = (eventCell) => {
+    const eventSources = [
+      eventCell.textContent,
+      eventCell.innerHTML,
+      ...Array.from(eventCell.querySelectorAll("a")).map((link) => link.getAttribute("href") ?? "")
+    ];
+
+    return eventSources.some((source) => /_(?:hf|f)(?=$|[^a-z])/i.test(source));
+  }
+
+  parseAthleteChronoRows = (htmlText, athleteName, includeFinals = false) => {
     const parser = new DOMParser();
     const htmlDocument = parser.parseFromString(htmlText, "text/html");
     const chronoTable = htmlDocument.getElementById("chronoloog_1") ?? htmlDocument.querySelector("table.chronoloogtabel");
@@ -316,13 +326,115 @@ class ClubChrono {
         return undefined;
       }
 
+      if (!includeFinals && this.isFinalEvent(eventCell)) {
+        return undefined;
+      }
+
       return {
         key: this.createChronoEntryKey(this.normalizeText(timeCell.textContent), this.normalizeText(eventCell.textContent)),
         timeHtml: timeCell.innerHTML,
         eventHtml: eventCell.innerHTML,
+        categoryCode: this.normalizeText(cells[1]?.querySelector(".visible-xs-inline")?.textContent ?? cells[1]?.textContent),
+        eventCode: this.normalizeText(eventCell.querySelector(".visible-xs-inline")?.textContent ?? eventCell.textContent),
         athleteName
       };
     }).filter((entry) => entry);
+  }
+
+  getCompetitionChronoUrl = () => {
+    const competitionMatch = window.location.pathname.match(/\/wedstrijd\/atleten\/(\d+)\/?$/);
+
+    if (!competitionMatch) {
+      return undefined;
+    }
+
+    return new URL(`/wedstrijd/chronoloog/${competitionMatch[1]}/`, window.location.origin).toString();
+  }
+
+  parseFinalChronoRows = (htmlText) => {
+    const parser = new DOMParser();
+    const htmlDocument = parser.parseFromString(htmlText, "text/html");
+    const chronoTable = htmlDocument.getElementById("chronoloog_1") ?? htmlDocument.querySelector("table.chronoloogtabel");
+
+    if (!chronoTable) {
+      return [];
+    }
+
+    return Array.from(chronoTable.querySelectorAll("tbody tr")).map((row) => {
+      const cells = Array.from(row.children);
+      const timeCell = cells[0];
+      const eventCell = cells.find((cell) => {
+        const eventCode = cell.querySelector(".visible-xs-inline")?.textContent ?? cell.textContent;
+        return /_(?:hf|f)\s*$/i.test(this.normalizeText(eventCode));
+      });
+      const startlistLink = eventCell?.querySelector('a[href*="/wedstrijd/startlijst/"]');
+      const eventCode = eventCell?.querySelector(".visible-xs-inline")?.textContent ?? eventCell?.textContent;
+
+      if (!timeCell || !eventCell || !startlistLink || !eventCode) {
+        return undefined;
+      }
+
+      return {
+        startlistUrl: new URL(startlistLink.getAttribute("href"), window.location.origin).toString(),
+        timeHtml: timeCell.innerHTML,
+        eventHtml: eventCell.innerHTML,
+        categoryCode: this.normalizeText(cells[1]?.querySelector(".visible-xs-inline")?.textContent ?? cells[1]?.textContent),
+        eventCode: this.normalizeText(eventCell.querySelector(".visible-xs-inline")?.textContent ?? eventCell.textContent)
+      };
+    }).filter((entry) => entry);
+  }
+
+  getFinalChronoEntries = async (athleteEntries, normalChronoEntries, statusElement) => {
+    const chronoUrl = this.getCompetitionChronoUrl();
+
+    if (!chronoUrl) {
+      return [];
+    }
+
+    this.setStatus(statusElement, "Finales en halve finales ophalen");
+    const chronoResponse = await this.fetchWithThrottle(chronoUrl, {
+      credentials: "include"
+    });
+
+    if (!chronoResponse.ok) {
+      throw new Error(`Ophalen mislukt voor ${chronoUrl} (HTTP ${chronoResponse.status})`);
+    }
+
+    const finalRows = this.parseFinalChronoRows(await chronoResponse.text());
+    const athleteEventCodes = new Map(athleteEntries.map((athleteEntry) => [athleteEntry.url, new Set()]));
+
+    for (const chronoEntry of normalChronoEntries) {
+      athleteEventCodes.get(chronoEntry.athleteUrl)?.add(`${chronoEntry.categoryCode.toLowerCase()}__${chronoEntry.eventCode.toLowerCase()}`);
+    }
+
+    const chronoEntries = [];
+
+    for (let index = 0; index < finalRows.length; index++) {
+      const finalRow = finalRows[index];
+      this.setStatus(statusElement, `Finales en halve finales verwerken ${index + 1}/${finalRows.length}`);
+      const baseEventCode = finalRow.eventCode.replace(/_(?:hf|f)$/i, "").toLowerCase();
+      const finalEventKey = `${finalRow.categoryCode.toLowerCase()}__${baseEventCode}`;
+
+      for (const athleteEntry of athleteEntries) {
+        if (!athleteEventCodes.get(athleteEntry.url)?.has(finalEventKey)) {
+          continue;
+        }
+
+        const eventText = this.normalizeText(finalRow.eventCode);
+        chronoEntries.push({
+          key: this.createChronoEntryKey(this.normalizeText(finalRow.timeHtml.replace(/<[^>]+>/g, " ")), eventText),
+          timeHtml: finalRow.timeHtml,
+          eventHtml: finalRow.eventHtml,
+          eventCode: finalRow.eventCode,
+          categoryCode: finalRow.categoryCode,
+          optional: true,
+          athleteName: athleteEntry.name,
+          athleteUrl: athleteEntry.url
+        });
+      }
+    }
+
+    return chronoEntries;
   }
 
   buildChronoRowsHtml = (chronoEntries) => {
@@ -333,11 +445,13 @@ class ClubChrono {
         groupedEntries.set(chronoEntry.key, {
           timeHtml: chronoEntry.timeHtml,
           eventHtml: chronoEntry.eventHtml,
+          optional: chronoEntry.optional === true,
           athleteNames: []
         });
       }
 
       const groupedEntry = groupedEntries.get(chronoEntry.key);
+      groupedEntry.optional = groupedEntry.optional || chronoEntry.optional === true;
 
       if (!groupedEntry.athleteNames.includes(chronoEntry.athleteName)) {
         groupedEntry.athleteNames.push(chronoEntry.athleteName);
@@ -353,6 +467,10 @@ class ClubChrono {
       timeCell.innerHTML = groupedEntry.timeHtml;
       athleteCell.innerHTML = groupedEntry.athleteNames.join("<br>");
       eventCell.innerHTML = groupedEntry.eventHtml;
+
+      if (groupedEntry.optional) {
+        eventCell.insertAdjacentHTML("beforeend", ' <span style="display:inline-block;margin-left:6px;padding:2px 5px;border:1px solid #9aa8b2;border-radius:3px;color:#5f6d76;font-size:10px;font-weight:700;line-height:1.2;">OPTIONEEL</span>');
+      }
 
       row.appendChild(timeCell);
       row.appendChild(athleteCell);
@@ -379,7 +497,7 @@ class ClubChrono {
     statusElement.setAttribute("data-error", isError ? "true" : "false");
   }
 
-  buildClubChrono = async (clubName, athleteEntries, statusElement) => {
+  buildClubChrono = async (clubName, athleteEntries, statusElement, includeFinals) => {
     const chronoEntries = [];
 
     for (let index = 0; index < athleteEntries.length; index++) {
@@ -391,15 +509,24 @@ class ClubChrono {
       });
 
       if (!response.ok) {
-        throw new Error(`Ophalen mislukt voor ${athleteEntry.url}`);
+        throw new Error(`Ophalen mislukt voor ${athleteEntry.url} (HTTP ${response.status})`);
       }
 
       const htmlText = await response.text();
 
-      const athleteRows = this.parseAthleteChronoRows(htmlText, athleteEntry.name);
+      const athleteRows = this.parseAthleteChronoRows(htmlText, athleteEntry.name, includeFinals);
 
       for (const athleteRow of athleteRows) {
+        athleteRow.athleteUrl = athleteEntry.url;
         chronoEntries.push(athleteRow);
+      }
+    }
+
+    if (includeFinals) {
+      const finalEntries = await this.getFinalChronoEntries(athleteEntries, chronoEntries, statusElement);
+
+      for (const finalEntry of finalEntries) {
+        chronoEntries.push(finalEntry);
       }
     }
 
@@ -460,6 +587,16 @@ class ClubChrono {
     this.updateClubSelect(select, clubEntries);
 
     const buildButton = this.createButton("Maak chronoloog");
+    const finalsLabel = document.createElement("label");
+    finalsLabel.className = "chrono-controls__checkbox";
+    const finalsCheckbox = document.createElement("input");
+    finalsCheckbox.type = "checkbox";
+    finalsLabel.appendChild(finalsCheckbox);
+    finalsLabel.appendChild(document.createTextNode(" Inclusief finales/halve finales"));
+    const optionalBadge = document.createElement("span");
+    optionalBadge.className = "chrono-controls__optional";
+    optionalBadge.textContent = "OPTIONEEL";
+    finalsLabel.appendChild(optionalBadge);
     const status = document.createElement("span");
     status.className = "chrono-controls__status";
 
@@ -513,6 +650,7 @@ class ClubChrono {
     controls.appendChild(label);
     controls.appendChild(select);
     controls.appendChild(buildButton);
+    controls.appendChild(finalsLabel);
     controls.appendChild(status);
 
     registrationContainer.prepend(controls);

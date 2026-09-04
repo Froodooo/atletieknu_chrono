@@ -22,7 +22,7 @@ _Hierin vind je onder andere het bestand manifest.json._
 # Verenigingschronoloog
 1. Open een inschrijfpagina van een wedstrijd op [atletiek.nu](https://www.atletiek.nu/), bijvoorbeeld via een URL als `https://www.atletiek.nu/wedstrijd/atleten/...`.
 2. Boven de inschrijvingstabel verschijnt een extra blok met een verenigingskeuze en de knop "Maak chronoloog".
-3. Kies een vereniging en klik op "Maak chronoloog".
+3. Kies een vereniging. Vink "Inclusief finales/halve finales" aan om ook onderdelen met de officiële suffixen `_f` en `_hf` mee te nemen.
 4. De extensie haalt vervolgens de atleetpagina's van die vereniging op, combineert hun tijdschema's en downloadt direct een nieuw bestand `chrono.html`.
 
 # Voorbeeld
