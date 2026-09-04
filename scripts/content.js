@@ -25,6 +25,28 @@ const ensureChronoStyles = () => {
       min-height: 36px;
       padding: 0 14px;
     }
+
+    .chrono-controls__label {
+      font-weight: 600;
+    }
+
+    .chrono-controls__select {
+      min-width: 220px;
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid #c9d2d8;
+      border-radius: 4px;
+      background: #fff;
+    }
+
+    .chrono-controls__status {
+      color: #44525c;
+      font-size: 13px;
+    }
+
+    .chrono-controls__status[data-error="true"] {
+      color: #b42318;
+    }
   `;
 
   document.head.appendChild(style);
@@ -157,6 +179,8 @@ const syncPageEnhancements = () => {
 
   if (url.includes("team/main")) {
     chrono();
+  } else if (url.includes("wedstrijd/atleten")) {
+    clubChrono.render();
   } else if (url.includes("records")) {
     personalRecords();
   }
