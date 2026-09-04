@@ -635,10 +635,10 @@ class ClubChrono {
           return;
         }
 
-        const clipboardCopied = await this.buildClubChrono(selectedClub, athleteEntries, status, finalsCheckbox.checked);
+        const clipboardCopied = await this.buildClubChrono(selectedClub, athleteEntries, status);
         this.setStatus(status, clipboardCopied
           ? `Chronoloog gemaakt voor ${selectedClub}`
-          : `Chronoloog gemaakt voor ${selectedClub}; bestand gedownload, kopiëren naar klembord is geblokkeerd`);
+          : `Chronoloog gemaakt voor ${selectedClub} (bestand gedownload, kopiëren naar klembord is mislukt)`);
       } catch (error) {
         this.setStatus(status, error.message, true);
       } finally {
