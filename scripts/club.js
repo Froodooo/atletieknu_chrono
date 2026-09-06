@@ -113,6 +113,14 @@ class ClubChrono {
     return "";
   }
 
+  extractAthleteName = (athleteLink) => {
+    const rawText = this.normalizeText(athleteLink.textContent);
+    const separatorIndex = rawText.lastIndexOf(" - ");
+    const nameAndCategory = separatorIndex === -1 ? rawText : rawText.slice(0, separatorIndex);
+
+    return nameAndCategory.replace(/\s+[A-Z0-9]+(?:-[A-Z0-9]+)?$/, "").trim();
+  }
+
   getClubEntries = (table) => {
     const headers = this.getHeaderTexts(table);
     const clubColumnIndex = this.getColumnIndex(headers, [/vereniging/i, /club/i]);
@@ -137,7 +145,7 @@ class ClubChrono {
         clubs.set(clubName, new Map());
       }
 
-      clubs.get(clubName).set(athleteUrl, this.normalizeText(athleteLink.textContent));
+      clubs.get(clubName).set(athleteUrl, this.extractAthleteName(athleteLink));
     }
 
     return clubs;
